@@ -47,6 +47,8 @@ class Scanner:
             c = self.token_strings[c](c) #second '(c)' is to actually call the lambda function
             if c:
                 self._add_token(c)
+        elif c.isdigit():
+            self._number_logic()
         else:
             self._interpreter.error(line=self.line, message="Unexpected character.")
     
@@ -69,6 +71,15 @@ class Scanner:
         else:
             self._add_token(TokenType.SLASH)
 
+    def _number_logic(self):
+        while(self._peek().isdigit()):
+            self._advance()
+        
+        if self._peek() == '.' and self._peek_next().isdigit():
+            self._advance()
+            while self._peek().isdigit(): self._advance()
+
+        self._add_token(TokenType.NUMBER, float(self._source[self.start:self.current]))
 
     def _string_logic(self):
         while self._peek() != '"' and not self._at_EOF():
@@ -91,6 +102,10 @@ class Scanner:
         if self._at_EOF(): return '\0'
         return self._source[self.current]         
 
+
+    def _peek_next(self):
+        if self.current + 1 >= len(self._source): return '\0'
+        return source[self.current + 1]
 
     '''
     Checks to see if the next character matches expected
