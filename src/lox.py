@@ -27,7 +27,11 @@ class Lox:
     
     def run(self, source):
         local_scanner = scanner.Scanner(self, source)
-        pass
+        tokens = list(local_scanner.scan_tokens())
+
+        for token in tokens:
+            print(token)
+
 
     def error(self, line, where='', message=None):
         self.report(line, where, message)

@@ -35,11 +35,34 @@ class Scanner:
             '"': lambda c: self._string_logic(),
         }
 
+
+        self.keywords = {
+            'and': TokenType.AND,
+            'class': TokenType.CLASS,
+            'else': TokenType.ELSE,
+            'False': TokenType.FALSE,
+            'for': TokenType.FOR,
+            'fun': TokenType.FUN,
+            'if': TokenType.IF,
+            'nil': TokenType.NIL,
+            'not': TokenType.NOT,
+            'or': TokenType.OR,
+            'print': TokenType.PRINT,
+            'return': TokenType.RETURN,
+            'super': TokenType.SUPER,
+            'this': TokenType.THIS,
+            'True': TokenType.TRUE,
+            'var': TokenType.VAR,
+            'while': TokenType.WHILE,
+        }
+
+
     def scan_tokens(self):
         while not self._at_EOF():
             self.start = self.current
             self._scan_token()
         self.tokens.append(Token(TokenType.EOF,'', None, self.line))
+        return self.tokens
 
     def _scan_token(self):
         c = self._advance()
@@ -49,6 +72,8 @@ class Scanner:
                 self._add_token(c)
         elif c.isdigit():
             self._number_logic()
+        elif c.isalpha() or c == '_':
+            self._identifier()
         else:
             self._interpreter.error(line=self.line, message="Unexpected character.")
     
@@ -68,6 +93,14 @@ class Scanner:
         if self._match('/'): # if the next char is also '/', marking a single line comment:
             # A comment goes until the end of the line so we just keep advancing until we reach the end of the comment
             while (self._peek() != '\n') and not self._at_EOF(): self._advance()
+        elif self._match('*'): # if the next char is a '*', marking a multiline comment:
+            while not self._is_at_end():
+                if self._match('\n'):
+                    self.line += 1
+                elif self._match('*') and self._match('/'):
+                    break
+                else:
+                    self._advance()
         else:
             self._add_token(TokenType.SLASH)
 
@@ -98,14 +131,14 @@ class Scanner:
     def _advance_line(self):
         self.line += 1
 
-    def _peek(self):
+    def _peek(self, i=0):
         if self._at_EOF(): return '\0'
-        return self._source[self.current]         
+        return self._source[self.current + i]         
 
 
     def _peek_next(self):
         if self.current + 1 >= len(self._source): return '\0'
-        return source[self.current + 1]
+        return self._source[self.current + 1]
 
     '''
     Checks to see if the next character matches expected
@@ -119,6 +152,17 @@ class Scanner:
             self.current += 1
             return True
     
+    def _identifier(self):
+        while self._peek().isalnum() or self._peek() == '_': self._advance()
+
+        # if the lexeme is not a keyword, the lexeme is an identifier. Otherwise, return the keyword token type
+        text = self._source[self.start:self.current]
+        t_type = self.keywords.get(text) # t_type means token type
+        if not t_type:
+           t_type = TokenType.IDENTIFIER
+        
+        self._add_token(t_type)
+
     def _at_EOF(self):
         return self.current >= len(self._source)
     
