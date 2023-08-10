@@ -1,4 +1,4 @@
-class Expr():
+class Expr:
     pass
 
 class Binary(Expr):
@@ -19,3 +19,4 @@ class Unary(Expr):
     def __init__(self, operator_token, expr_right):
         self.operator_token = operator_token
         self.expr_right = expr_right
+
